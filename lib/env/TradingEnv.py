@@ -236,7 +236,8 @@ class TradingEnv(gym.Env):
             if self.viewer is None:
                 self.viewer = TradingChart(self.data_provider.data_frame)
 
-            self.viewer.render(self.current_step,
+            self.viewer.render(self.data_provider.data_frame,
+                               self.current_step,
                                self.net_worths,
                                self.render_benchmarks,
                                self.trades)

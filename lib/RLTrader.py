@@ -16,7 +16,7 @@ from stable_baselines import PPO2
 from lib.env.TradingEnv import TradingEnv
 from lib.env.reward import BaseRewardStrategy, IncrementalProfit, WeightedUnrealizedProfit
 from lib.data.providers.dates import ProviderDateFormat
-from lib.data.providers import BaseDataProvider,  StaticDataProvider, ExchangeDataProvider
+from lib.data.providers import BaseDataProvider,  StaticDataProvider, ExchangeDataProvider, LiveDataProvider
 from lib.util.logger import init_logger
 
 
@@ -78,6 +78,9 @@ class RLTrader:
                                                     data_columns=data_columns)
         elif self.data_provider == 'exchange':
             self.data_provider = ExchangeDataProvider(**self.exchange_args)
+
+        elif self.data_provider == 'live':
+            self.data_provider = LiveDataProvider(**self.exchange_args)
 
         self.logger.debug(f'Initialized Features: {self.data_provider.columns}')
 
@@ -274,6 +277,53 @@ class RLTrader:
 
             if render_env:
                 test_env.render(mode='human')
+
+            if done:
+                net_worths = pd.DataFrame({
+                    'Date': info[0]['timestamps'],
+                    'Balance': info[0]['net_worths'],
+                })
+
+                net_worths.set_index('Date', drop=True, inplace=True)
+                returns = net_worths.pct_change()[1:]
+
+                if render_report:
+                    qs.plots.snapshot(returns.Balance, title='RL Trader Performance')
+
+                if save_report:
+                    reports_path = path.join('data', 'reports', f'{self.study_name}__{model_epoch}.html')
+                    qs.reports.html(returns.Balance, file=reports_path)
+
+        self.logger.info(
+            f'Finished testing model ({self.study_name}__{model_epoch}): ${"{:.2f}".format(np.sum(rewards))}')
+
+
+    def trade(self, model_epoch: int = 0, render_env: bool = True, render_report: bool = True, save_report: bool = False):
+        trade_provider = self.data_provider
+        trade_env = DummyVecEnv([make_env(trade_provider) for _ in range(1)])
+        init_envs = DummyVecEnv([make_env(trade_provider) for _ in range(self.n_envs)])
+        model_path = path.join('data', 'agents', f'{self.study_name}__{model_epoch}.pkl')
+        model = self.Model.load(model_path, env=init_envs)
+
+        self.logger.info(f'Training with model ({self.study_name}__{model_epoch})')
+
+        zero_completed_obs = np.zeros((self.n_envs,) + init_envs.observation_space.shape)
+        
+        zero_completed_obs[0, :] = trade_env.reset()
+
+        state = None
+        rewards = []
+
+        while True:
+            action, state = model.predict(zero_completed_obs, state=state)
+            obs, reward, done, info = trade_env.step([action[0]])
+
+            zero_completed_obs[0, :] = obs
+
+            rewards.append(reward)
+
+            if render_env:
+                trade_env.render(mode='human')
 
             if done:
                 net_worths = pd.DataFrame({

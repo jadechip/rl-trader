@@ -70,6 +70,16 @@ class RLTraderCLI:
         test_parser.add_argument('--save-report', dest="save_report", action="store_true",
                                  help='Save the performance report as .html')
 
+        trade_parser = subparsers.add_parser('trade', description='Trade with saved model')
+        trade_parser.add_argument("--data-provider", "-d", type=str, default="static")
+        trade_parser.add_argument('--model-epoch', type=int, default=0, help='Model epoch index')
+        trade_parser.add_argument('--no-render', dest="render_env", action="store_false",
+                                 help='Render the test environment')
+        trade_parser.add_argument('--no-report', dest="render_report", action="store_false",
+                                 help='Render the performance report')
+        trade_parser.add_argument('--save-report', dest="save_report", action="store_true",
+                                 help='Save the performance report as .html')        
+
         subparsers.add_parser('update-static-data', description='Update static data')
 
         self.parser.set_defaults(**defaults)

@@ -55,5 +55,10 @@ if __name__ == '__main__':
                     render_env=args.render_env,
                     render_report=args.render_report,
                     save_report=args.save_report)
+    elif args.command == 'trade':
+        trader.trade(model_epoch=args.model_epoch,
+                    render_env=args.render_env,
+                    render_report=args.render_report,
+                    save_report=args.save_report)                    
     elif args.command == 'update-static-data':
         download_data_async()

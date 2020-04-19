@@ -20,7 +20,7 @@ class TradingChart:
 
     def __init__(self, df):
         self.df = df
-
+        # plt.style.use('dark_background')
         # Create a figure on screen and set the title
         self.fig = plt.figure()
 
@@ -124,7 +124,8 @@ class TradingChart:
                                        size="large",
                                        arrowprops=dict(arrowstyle='simple', facecolor=color))
 
-    def render(self, current_step, net_worths, benchmarks, trades, window_size=200):
+    def render(self, data_frame, current_step, net_worths, benchmarks, trades, window_size=200):
+        self.df = data_frame
         net_worth = round(net_worths[-1], 2)
         initial_net_worth = round(net_worths[0], 2)
         profit_percent = round((net_worth - initial_net_worth) / initial_net_worth * 100, 2)
@@ -133,8 +134,8 @@ class TradingChart:
 
         window_start = max(current_step - window_size, 0)
         step_range = slice(window_start, current_step + 1)
-        times = self.df['Date'].values[step_range]
-
+        r, c = self.df.shape
+        times = self.df['Date'].values[step_range].astype("int64")
         self._render_net_worth(step_range, times, current_step, net_worths, benchmarks)
         self._render_price(step_range, times, current_step)
         self._render_volume(step_range, times)

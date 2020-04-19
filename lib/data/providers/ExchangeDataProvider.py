@@ -9,13 +9,13 @@ from lib.data.providers import BaseDataProvider
 
 
 class ExchangeDataProvider(BaseDataProvider):
-    _current_index = '2018-01-01T00:00:00Z'
+    _current_index = '2020-04-01T00:00:00Z'
     _has_loaded_historical = False
 
     def __init__(self,
                  exchange_name: str = 'binance',
                  symbol_pair: str = 'BTC/USDT',
-                 timeframe: str = '1h',
+                 timeframe: str = '1m',
                  start_date: datetime = None,
                  date_format: ProviderDateFormat = ProviderDateFormat.TIMESTAMP_MS,
                  data_frame: pd.DataFrame = None,
